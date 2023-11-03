@@ -3,6 +3,9 @@ import axios from "axios";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+// next-auth does nt allow direcr post request
+import {signIn} from 'next-auth/react'
+// import {signIn} from 'next-auth/client'(next-auth v3)
 export default function LoginForm() {
   // use next router
   const router = useRouter();
@@ -19,27 +22,31 @@ export default function LoginForm() {
         setErrorMsg("please provide login details");
         return;
       }
+      // we have to specify the kind of providers we use, cause we can use more than provider in our app
+        // the signIn function will always resolve, wont return an error
+      const result =signIn('credentials',{
+        email:email,
+        password:password,
+        redirect:false
+        // we use the redirect false to prevent next-auth from redirecting us to an error page
 
-      // send to an endpoint
-      const login = await axios.post(
-        "api/login/",
-        { email, password },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      if (login.status === 200) {
-        router.replace("/");
+
+      })
+      if(result.error){
+        setErrorMsg(result.error);
+        return
       }
-      else{
-        setErrorMsg('invalid credentials')
-      }
-    } catch (error) {
-      console.error(`error ${error}`);
+      // if our the login is successful direct us to our dashboard page 
+      router.push('/dasboard')
+
     }
+    
+    catch(error){
+    console.log(error)
   }
+      
+  }
+  
 
   return (
     <form
